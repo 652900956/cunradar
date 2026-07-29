@@ -76,6 +76,12 @@ def _run_collector(
     # 1. Time window filter
     aged = _filter_by_age(raw, max_hours, now)
 
+    # 1.5. For snapshot sources (trending), clear old entries before dedup
+    #     so a fresh daily snapshot is always recorded.
+    if not enable_fallback and aged:
+        for item in aged:
+            storage.delete_source(item.source, item.item_id)
+
     # 2. Dedup
     new_items: list[CollectedItem] = []
     for item in aged:

@@ -55,6 +55,13 @@ class Storage:
         )
         self._conn.commit()
 
+    def delete_source(self, source: str, item_id: str) -> None:
+        """Delete an item by its ID (used for snapshot source refresh)."""
+        self._conn.execute(
+            "DELETE FROM seen_items WHERE item_id = ?", (item_id,)
+        )
+        self._conn.commit()
+
     def save_report(self, date_str: str, html_path: str) -> None:
         """Record that a daily report was generated."""
         now = datetime.now(timezone.utc).isoformat()
