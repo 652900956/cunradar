@@ -74,7 +74,6 @@ jobs:
           key: cunradar-db-v1
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: pages deploy output/ --project-name=${{ vars.CUNRADAR_PROJECT_NAME || 'cunradar' }}
+        run: npx wrangler pages deploy output/ --project-name=${{ vars.CUNRADAR_PROJECT_NAME || 'cunradar' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
