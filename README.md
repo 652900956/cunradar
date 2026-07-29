@@ -92,7 +92,11 @@ python -m cunradar
 
 ## GitHub Actions 部署
 
-项目内置了 GitHub Actions 工作流，每天定时运行采集 + 部署到 GitHub Pages。
+项目内置了 GitHub Actions 工作流，每天定时运行采集 + 部署到 Cloudflare Pages。
+
+### 前置条件
+
+在 Cloudflare Dashboard 中创建一个 Pages 项目（名称任意，例如 `cunradar`），无需连接 git 仓库，后续通过 wrangler CLI 部署。
 
 ### 步骤
 
@@ -117,26 +121,24 @@ git push -u origin main
 
 | Secret 名称 | 说明 |
 |-------------|------|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API Token（Pages 部署权限） |
 | `DEEPSEEK_API_KEY` | DeepSeek API 密钥 |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token（可选） |
 | `TELEGRAM_CHAT_ID` | Telegram 频道/群组 ID（可选） |
 
-> Telegram 可选。如果不需要 Telegram 推送，这两个 Secret 可以不填。
-> GitHub Token 自动由 `github.token` 提供，无需手动配置。
+> **Cloudflare API Token 获取**：
+> 1. 进入 [Cloudflare Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+> 2. 创建 Token，权限选择 **Cloudflare Pages → Edit**
+> 3. 复制 Token 添加到 GitHub Secrets
 
-#### 4. 启用 GitHub Pages
+> **可选配置**：在 **Settings → Secrets and variables → Actions → Variables** 中添加 `CUNRADAR_PUBLIC_URL`，值为 Cloudflare Pages 分配的域名（如 `https://cunradar.pages.dev`），日报中的链接将指向该地址。
 
-1. 进入仓库 **Settings → Pages**
-2. **Source** 选择 **GitHub Actions**
-
-> 工作流已在 `.github/workflows/daily.yml` 中配置好 Pages 部署步骤，选择 Actions 即可。
-
-#### 5. 触发运行
+#### 4. 触发运行
 
 - **定时运行**：默认每天早上 08:00（北京时间）自动运行
 - **手动运行**：进入 **Actions → CunRadar Daily → Run workflow** 即可手动触发
 
-#### 6. 修改运行时间
+#### 5. 修改运行时间
 
 编辑 `.github/workflows/daily.yml`，修改 cron 表达式：
 

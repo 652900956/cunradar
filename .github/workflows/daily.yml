@@ -16,33 +16,22 @@ on:
     # 常用配置：
     #   "0 0 * * *"   每天北京 08:00（默认）
     #   "30 1 * * *"  每天北京 09:30
-    #   "0 22 * * *"  每天北京 06:00
+    #   "0 12 * * *"  每天北京 20:00
     #   "0 0 * * 1-5" 工作日北京 08:00（周末不跑）
     #
     # 只改第一、二个数字（分钟、小时），其余保持 * 不变
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     - cron: "0 0 * * *"
-  workflow_dispatch:  # ← 这就是你需要的「手动运行按钮」
-                        #   部署到 GitHub 后，在 Actions 页面点「Run workflow」即可
+  workflow_dispatch:
 
 concurrency:
   group: cunradar-${{ github.ref_name }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
   scan:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
-    # Allow deploying to GitHub Pages
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout repository
@@ -67,15 +56,11 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
-          CUNRADAR_PUBLIC_URL: ${{ steps.pages-url.outputs.base_url || '' }}
-          GITHUB_ACTIONS: true
+          CUNRADAR_PUBLIC_URL: ${{ vars.CUNRADAR_PUBLIC_URL || '' }}
         run: uv run python -m cunradar
 
-      - name: Upload HTML report as Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
-          path: output/
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: pages deploy output/ --project-name=cunradar
