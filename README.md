@@ -16,7 +16,7 @@
 | 💻 **GitHub 项目追踪** | 关注指定仓库的 commits |
 | 🔥 **GitHub Trending** | 每日 GitHub 热门仓库排行榜（前 N 名） |
 | 🤖 **AI 智能摘要** | 使用 DeepSeek 模型，自动生成今日技术动态摘要 |
-| 📄 **HTML 日报** | 生成响应式网页报告，自动部署到 GitHub Pages |
+| 📄 **HTML 日报** | 生成响应式网页报告，自动部署到 Cloudflare Pages |
 | 📱 **Telegram 推送** | 每日定时推送到 Telegram 频道/群组 |
 
 ---
@@ -90,70 +90,102 @@ python -m cunradar
 
 ---
 
-## GitHub Actions 部署
+## 部署架构
 
-项目内置了 GitHub Actions 工作流，每天定时运行采集 + 部署到 Cloudflare Pages。
+CunRadar 由三个免费平台协作运行：
 
-### 前置条件
+| 做什么 | 平台 | 是否免费 |
+|-------|------|---------|
+| 📥 数据采集 + AI 摘要 | GitHub Actions（定时运行） | ✅ 公共仓库无限额度 |
+| 🗄️ 去重数据库 | GitHub Actions Cache | ✅ 公共仓库无限额度 |
+| 🌐 HTML 日报展示 | Cloudflare Pages（自定义域名） | ✅ 免费计划够用 |
 
-在 Cloudflare Dashboard 中创建一个 Pages 项目（名称任意，例如 `cunradar`），无需连接 git 仓库，后续通过 wrangler CLI 部署。
+---
 
-### 步骤
+## 部署步骤
 
-#### 1. 在 GitHub 上创建仓库
+### 1. 在 Cloudflare 创建 Pages 项目
 
-创建一个新仓库（公开或私有均可），例如 `CunRadar`。
+1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. 进入 **Workers & Pages → Pages → Create project**
+3. 项目名称填入 `cunradar`（可自定义）
+4. **不要连接 git 仓库**，选择直接创建空项目即可
 
-#### 2. 推送代码
+### 2. 在 GitHub 上创建仓库
+
+创建一个新仓库（公开仓库才能享受无限额度），例如 `CunRadar`。
+
+### 3. 推送代码
 
 ```bash
 git init
 git add .
 git commit -m "init: CunRadar - AI-powered Personal Information Radar"
 git branch -M main
-git remote add origin https://github.com/cunzhangcrypto/CunRadar.git
+git remote add origin https://github.com/你的用户名/CunRadar.git
 git push -u origin main
 ```
 
-#### 3. 配置 Secrets
+### 4. 配置 GitHub Secrets
 
-在 GitHub 仓库的 **Settings → Secrets and variables → Actions** 中添加以下 Secrets：
+在仓库的 **Settings → Secrets and variables → Actions → Secrets** 中添加：
 
-| Secret 名称 | 说明 |
-|-------------|------|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API Token（Pages 部署权限） |
-| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 |
-| `TELEGRAM_BOT_TOKEN` | Telegram Bot Token（可选） |
-| `TELEGRAM_CHAT_ID` | Telegram 频道/群组 ID（可选） |
+| Secret 名称 | 必须 | 说明 |
+|-------------|------|------|
+| `CLOUDFLARE_API_TOKEN` | ✅ 是 | Cloudflare API Token，用于部署到 Pages |
+| `DEEPSEEK_API_KEY` | ✅ 是 | DeepSeek API 密钥，用于生成 AI 摘要 |
+| `TELEGRAM_BOT_TOKEN` | ❌ 否 | Telegram Bot Token，不需要推送可不填 |
+| `TELEGRAM_CHAT_ID` | ❌ 否 | Telegram 频道/群组 ID |
 
-> **Cloudflare API Token 获取**：
-> 1. 进入 [Cloudflare Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens)
-> 2. 创建 Token，权限选择 **Cloudflare Pages → Edit**
-> 3. 复制 Token 添加到 GitHub Secrets
+**Cloudflare API Token 获取步骤：**
 
-> **可选配置**：在 **Settings → Secrets and variables → Actions → Variables** 中添加 `CUNRADAR_PUBLIC_URL`，值为 Cloudflare Pages 分配的域名（如 `https://cunradar.pages.dev`），日报中的链接将指向该地址。
+1. 进入 [Cloudflare Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+2. 点击 **Create Token**
+3. 选择 **Cloudflare Pages → Edit** 模板
+4. 确认后复制 Token，添加到 GitHub Secrets
 
-#### 4. 触发运行
+### 5. 配置 GitHub Variables（可选）
 
-- **定时运行**：默认每天早上 08:00（北京时间）自动运行
-- **手动运行**：进入 **Actions → CunRadar Daily → Run workflow** 即可手动触发
+在 **Settings → Secrets and variables → Actions → Variables** 中添加：
 
-#### 5. 修改运行时间
+| Variable 名称 | 说明 |
+|---------------|------|
+| `CUNRADAR_PUBLIC_URL` | 日报的公开访问地址，如 `https://cunradar.pages.dev` |
 
-编辑 `.github/workflows/daily.yml`，修改 cron 表达式：
+设置后，Telegram 日报中的「完整日报」链接会指向这个地址。
+
+### 6. 设置自定义域名（推荐）
+
+1. 进入 Cloudflare Pages → 你的项目 → **Custom domains**
+2. 点击 **Set up a custom domain**
+3. 输入你的域名（如 `radar.czlab.com`）
+4. Cloudflare 会自动配置 DNS 和 SSL 证书
+5. 完成后将 `CUNRADAR_PUBLIC_URL` 更新为你的自定义域名
+
+### 7. 触发运行
+
+进入 **Actions → CunRadar Daily → Run workflow** 手动触发一次。
+
+- GitHub Actions 会自动：运行采集 → 生成日报 → 部署到 Cloudflare Pages → 缓存数据库
+- 以后每天按设定的时间自动运行
+
+---
+
+### 运行时间说明
+
+GitHub Actions 使用 UTC 时间。编辑 `.github/workflows/daily.yml` 修改 cron 表达式：
 
 ```yaml
 schedule:
   - cron: "0 0 * * *"    # 北京时间 08:00
 ```
 
-| 北京时间 | UTC 时间  |
-|---------|----------|
+| 北京时间 | UTC 时间 |
+|---------|---------|
 | 08:00   | `0 0 * * *` |
-| 09:30   | `30 1 * * *` |
 | 20:00   | `0 12 * * *` |
-
-> GitHub Actions 使用 UTC 时间，北京时间 = UTC + 8 小时。
+| 09:30   | `30 1 * * *` |
+| 06:00   | `0 22 * * *` |
 
 ---
 
@@ -211,7 +243,7 @@ app:
 - **语言**：Python ≥ 3.12
 - **AI**：DeepSeek API
 - **存储**：SQLite
-- **部署**：GitHub Actions + GitHub Pages
+- **部署**：GitHub Actions + Cloudflare Pages
 - **通知**：Telegram Bot API
 
 ---

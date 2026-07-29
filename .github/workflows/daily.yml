@@ -50,6 +50,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --no-dev
 
+      - name: Restore database from cache
+        uses: actions/cache@v4
+        id: db-cache
+        with:
+          path: output/cunradar.db
+          key: cunradar-db-v1
+
       - name: Run CunRadar
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
@@ -58,6 +65,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
           CUNRADAR_PUBLIC_URL: ${{ vars.CUNRADAR_PUBLIC_URL || '' }}
         run: uv run python -m cunradar
+
+      - name: Save database to cache
+        uses: actions/cache/save@v4
+        with:
+          path: output/cunradar.db
+          key: cunradar-db-v1
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
