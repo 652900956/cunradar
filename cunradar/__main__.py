@@ -88,15 +88,19 @@ def _run_collector(
 
     # 3. Fallback: if nothing new in window, take the latest item as baseline
     if not new_items and enable_fallback and raw:
+        print(f"  [{name}] Fallback: {len(raw)} raw items available")
         # Try to sort by published date first
         with_date = [it for it in raw if it.published is not None]
+        print(f"  [{name}] Fallback: {len(with_date)} items have published dates")
         if with_date:
             with_date.sort(key=lambda x: x.published, reverse=True)
             fallback = with_date[0]
+            print(f"  [{name}] Fallback picked (by date): {fallback.title} ({fallback.published})")
         else:
             # No items have dates — just take the first one
             fallback = raw[0]
-        print(f"  [{name}] No new items in window — showing latest: {fallback.title}")
+            print(f"  [{name}] Fallback picked (first raw): {fallback.title}")
+        print(f"  [{name}] Fallback item_id: {fallback.item_id}, source: {fallback.source}")
         storage.mark_seen(
             fallback.item_id, fallback.source,
             fallback.source_name, fallback.title, fallback.url,
@@ -255,6 +259,7 @@ def main() -> None:
             date_str=date_str,
             output_dir=output_dir,
             configured_sources=configured_sources,
+            now=now,
         )
         storage.save_report(date_str, html_path)
     else:

@@ -58,6 +58,7 @@ def generate_html(
     date_str: str,
     output_dir: str,
     configured_sources: list[str] | None = None,
+    now: datetime | None = None,
 ) -> str:
     """Generate the daily HTML report.
 
@@ -69,6 +70,7 @@ def generate_html(
         configured_sources: Source types the user has configured.
             If provided, empty sections will be rendered as "无新内容".
             If None, empty sections are omitted.
+        now: Timezone-aware datetime for timestamps. Defaults to local now.
 
     Returns:
         Path to the generated HTML file.
@@ -123,14 +125,15 @@ def generate_html(
     summary_items = sum(len(v) for v in grouped.values())
 
     html = template.replace("{{TITLE}}", f"CunRadar Daily - {date_str}")
-    now_local = datetime.now()
-    display_datetime = f"{date_str}  {now_local.strftime('%H:%M')}"
+    if now is None:
+        now = datetime.now()
+    display_datetime = f"{date_str}  {now.strftime('%H:%M')}"
     html = html.replace("{{DATE}}", display_datetime)
     html = html.replace("{{SUMMARY_ITEMS}}", str(summary_items))
     html = html.replace("{{SUMMARY_SOURCES}}", str(total_sections))
     html = html.replace("{{SECTIONS}}", section_html)
     html = html.replace("{{DIGEST}}", digest_html)
-    html = html.replace("{{GENERATED_AT}}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    html = html.replace("{{GENERATED_AT}}", now.strftime("%Y-%m-%d %H:%M:%S"))
 
     html_path = str(out / "index.html")
     Path(html_path).write_text(html, encoding="utf-8")
