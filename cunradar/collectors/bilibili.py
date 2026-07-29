@@ -1,9 +1,7 @@
 """Bilibili UP主视频采集器。
 
-使用 RSSHub 公共实例获取 UP 主视频更新：
-  https://rsshub.app/bilibili/user/video/{uid}
-
-RSSHub 频率限制: 120 次 / 3 分钟，日常使用完全够用。
+使用 B站官方 RSS 接口获取 UP 主视频更新：
+  https://rss.bilibili.com/space/{uid}
 """
 
 from datetime import datetime, timezone
@@ -14,9 +12,9 @@ from .base import BaseCollector, CollectedItem
 
 
 class BilibiliCollector(BaseCollector):
-    """Collect latest videos from a list of Bilibili creators via RSSHub."""
+    """Collect latest videos from a list of Bilibili creators via official RSS."""
 
-    RSSHUB_BASE = "https://rsshub.app/bilibili/user/video"
+    RSS_BASE = "https://rss.bilibili.com/space"
 
     def __init__(self, creators: list[dict]) -> None:
         self.creators = creators
@@ -26,7 +24,7 @@ class BilibiliCollector(BaseCollector):
         for creator in self.creators:
             name = creator["name"]
             uid = creator["uid"]
-            feed_url = f"{self.RSSHUB_BASE}/{uid}"
+            feed_url = f"{self.RSS_BASE}/{uid}"
 
             try:
                 feed = feedparser.parse(feed_url)
