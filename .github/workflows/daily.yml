@@ -1,0 +1,81 @@
+name: CunRadar Daily
+
+on:
+  schedule:
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 自定义运行时间（UTC 时间）
+    #
+    #  分钟 小时 日 月 星期
+    #   ──  ──  ─ ─ ───
+    #  "0   8   * * *"  = 每天 UTC 08:00
+    #
+    # 北京时间比 UTC 快 8 小时，所以：
+    #   UTC 00:00 = 北京 08:00
+    #   UTC 16:00 = 北京 00:00（次日）
+    #
+    # 常用配置：
+    #   "0 0 * * *"   每天北京 08:00（默认）
+    #   "30 1 * * *"  每天北京 09:30
+    #   "0 22 * * *"  每天北京 06:00
+    #   "0 0 * * 1-5" 工作日北京 08:00（周末不跑）
+    #
+    # 只改第一、二个数字（分钟、小时），其余保持 * 不变
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - cron: "0 0 * * *"
+  workflow_dispatch:  # ← 这就是你需要的「手动运行按钮」
+                        #   部署到 GitHub 后，在 Actions 页面点「Run workflow」即可
+
+concurrency:
+  group: cunradar-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Allow deploying to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install dependencies
+        run: uv sync --frozen --no-dev
+
+      - name: Run CunRadar
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
+          CUNRADAR_PUBLIC_URL: ${{ steps.pages-url.outputs.base_url || '' }}
+          GITHUB_ACTIONS: true
+        run: uv run python -m cunradar
+
+      - name: Upload HTML report as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: output/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

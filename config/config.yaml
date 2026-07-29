@@ -1,0 +1,59 @@
+# ═══════════════════════════════════════════════════════════════
+#                    CunRadar 配置文件
+#                        Version: 1.0
+# ═══════════════════════════════════════════════════════════════
+
+# 基础设置
+app:
+  timezone: "Asia/Shanghai"
+  # 只统计过去 N 小时内发布的内容（首次跑不会报出旧视频）
+  max_item_age_hours: 24
+
+# ─── 关注列表 ─────────────────────────────────────────────────
+# 在这里定义你想追踪的所有人、项目、博客
+follow:
+
+  # YouTube 频道
+  youtube:
+    - name: "Web3村长"
+      channel_id: "UC5MbekhrH8iyFBQLbccBSRg"
+
+  # B站 UP 主
+  bilibili:
+    - name: "村长"
+      uid: 1224034462
+
+  # RSS / 博客订阅
+  rss:
+    - name: "村长博客"
+      url: "https://www.cunzhangblog.com/rss.xml"
+
+  # GitHub 项目追踪
+  github:
+    - name: "cunzhanglab/cunzhanglab"
+      repo: "cunzhangcrypto/cunzhanglab"
+
+  # GitHub Trending
+  github_trending:
+    enabled: true
+    language: ""
+    limit: 5
+
+# ─── AI 配置 ───────────────────────────────────────────────────
+ai:
+  model: "deepseek-chat"              # DeepSeek 模型名
+  api_key: "${DEEPSEEK_API_KEY}"      # 从环境变量读取
+  api_base: "https://api.deepseek.com"
+  timeout: 120
+
+# ─── 通知配置 ─────────────────────────────────────────────────
+notification:
+  telegram:
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+# ─── 输出配置 ─────────────────────────────────────────────────
+output:
+  dir: "output"
+  # 生成 HTML 日报
+  html: true
