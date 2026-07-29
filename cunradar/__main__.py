@@ -88,19 +88,20 @@ def _run_collector(
 
     # 3. Fallback: if nothing new in window, take the latest item as baseline
     if not new_items and enable_fallback and raw:
-        sorted_raw = sorted(
-            (it for it in raw if it.published is not None),
-            key=lambda x: x.published,
-            reverse=True,
+        # Try to sort by published date first
+        with_date = [it for it in raw if it.published is not None]
+        if with_date:
+            with_date.sort(key=lambda x: x.published, reverse=True)
+            fallback = with_date[0]
+        else:
+            # No items have dates — just take the first one
+            fallback = raw[0]
+        print(f"  [{name}] No new items in window — showing latest: {fallback.title}")
+        storage.mark_seen(
+            fallback.item_id, fallback.source,
+            fallback.source_name, fallback.title, fallback.url,
         )
-        if sorted_raw:
-            fallback = sorted_raw[0]
-            print(f"  [{name}] No new items in window — showing latest: {fallback.title}")
-            storage.mark_seen(
-                fallback.item_id, fallback.source,
-                fallback.source_name, fallback.title, fallback.url,
-            )
-            new_items.append(fallback)
+        new_items.append(fallback)
 
     print(f"  [{name}] {len(new_items)} new out of {len(raw)} total ({len(aged)} in time window)")
     return new_items
@@ -246,7 +247,7 @@ def main() -> None:
 
     # ── 6. Generate HTML report ──
     html_path = None
-    if output_cfg.get("html", True) and all_new_items:
+    if output_cfg.get("html", True) and (all_new_items or configured_sources):
         print("\n[Report] Generating HTML...")
         html_path = generate_html(
             items=all_new_items,
