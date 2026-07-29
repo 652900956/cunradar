@@ -64,6 +64,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
           CUNRADAR_PUBLIC_URL: ${{ vars.CUNRADAR_PUBLIC_URL || '' }}
+          FOLLOW_CONFIG: ${{ secrets.FOLLOW_CONFIG || vars.FOLLOW_CONFIG || '' }}
         run: uv run python -m cunradar
 
       - name: Save database to cache
