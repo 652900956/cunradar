@@ -45,26 +45,28 @@ pip install -e .
 ```yaml
 follow:
   youtube:
-    - name: "Web3村长"
-      channel_id: "UC5MbekhrH8iyFBQLbccBSRg"
+    - name: "示例博主"
+      channel_id: "UCxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
   bilibili:
-    - name: "村长"
-      uid: 1224034462
+    - name: "示例UP主"
+      uid: 1234567890
 
   rss:
-    - name: "村长博客"
-      url: "https://www.cunzhangblog.com/rss.xml"
+    - name: "示例博客"
+      url: "https://example.com/rss.xml"
 
   github:
-    - name: "cunzhanglab/cunzhanglab"
-      repo: "cunzhangcrypto/cunzhanglab"
+    - name: "示例项目"
+      repo: "owner/repo"
 
   github_trending:
     enabled: true
     language: ""
     limit: 5
 ```
+
+> 如果你的仓库是公开的，建议通过下文「隐私保护」的方式传入关注列表。
 
 ### 4. 配置密钥
 
@@ -144,13 +146,15 @@ git push -u origin main
 3. 选择 **Cloudflare Pages → Edit** 模板
 4. 确认后复制 Token，添加到 GitHub Secrets
 
-### 5. 配置 GitHub Variables（可选）
+### 5. 配置 GitHub Variables
 
 在 **Settings → Secrets and variables → Actions → Variables** 中添加：
 
 | Variable 名称 | 说明 |
 |---------------|------|
 | `CUNRADAR_PUBLIC_URL` | 日报的公开访问地址，如 `https://cunradar.pages.dev` |
+| `CUNRADAR_PROJECT_NAME` | Cloudflare Pages 项目名，默认 `cunradar` |
+| `FOLLOW_CONFIG` |（可选）JSON 格式的关注列表，优先级高于 config.yaml |
 
 设置后，Telegram 日报中的「完整日报」链接会指向这个地址。
 
@@ -186,6 +190,30 @@ schedule:
 | 20:00   | `0 12 * * *` |
 | 09:30   | `30 1 * * *` |
 | 06:00   | `0 22 * * *` |
+
+---
+
+## 隐私保护
+
+如果你想公开分享代码但不想暴露自己关注了哪些博主，可以通过环境变量传入关注列表，**优先级高于** `config/config.yaml`。
+
+### 本地开发
+
+在 `.env` 中添加：
+
+```env
+FOLLOW_CONFIG={"youtube":[{"name":"博主A","channel_id":"UC..."},{"name":"博主B","channel_id":"UC..."}],"bilibili":[{"name":"UP主A","uid":123}],"rss":[{"name":"博客A","url":"https://example.com/rss.xml"}],"github":[{"name":"项目A","repo":"owner/repo"}],"github_trending":{"enabled":true,"language":"","limit":5}}
+```
+
+> `.env` 已在 `.gitignore` 中，不会被提交到仓库。
+
+### 线上部署
+
+在 GitHub 仓库的 **Settings → Secrets and variables → Actions → Variables** 中添加：
+
+| Variable 名称 | 说明 |
+|---------------|------|
+| `FOLLOW_CONFIG` | JSON 格式的关注列表（同上方格式） |
 
 ---
 

@@ -2,8 +2,13 @@
 
 Loads config.yaml, resolves ${ENV_VAR} references,
 and provides typed access to all settings.
+
+The ``follow`` section can be overridden via the ``FOLLOW_CONFIG``
+environment variable (JSON format) — useful for keeping your
+subscription list private in a public repository.
 """
 
+import json
 import os
 import re
 from pathlib import Path
@@ -84,4 +89,16 @@ def load_config(path: str | None = None) -> dict:
     with open(config_path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
-    return _resolve_dict(raw)
+    config = _resolve_dict(raw)
+
+    # Override follow list from environment variable (JSON format)
+    # This allows keeping subscriptions private while the repo is public.
+    follow_json = os.environ.get("FOLLOW_CONFIG")
+    if follow_json:
+        try:
+            config["follow"] = json.loads(follow_json)
+            print("  [Config] Follow list loaded from FOLLOW_CONFIG env var")
+        except json.JSONDecodeError as e:
+            print(f"  [Config] Warning: FOLLOW_CONFIG is not valid JSON: {e}")
+
+    return config
