@@ -1,18 +1,16 @@
 """Bilibili UP主视频采集器。
 
-使用 B站搜索 API 获取 UP 主视频更新。
-  https://api.bilibili.com/x/web-interface/search/type
-  ?search_type=video&keyword={name}&order=pubdate
+使用 B站搜索 API + curl_cffi 模拟浏览器TLS指纹获取视频更新。
 
-搜索 API 比空间稿件 API 风控更宽松，但仍需要先访问空间主页
-获取 Cookie（buvid3）才能绕过 WAF。
+curl_cffi 会模拟 Chrome 浏览器的 TLS 握手特征，
+绕过 B站 WAF 对 Python requests 库的拦截。
 """
 
 import re
 import time
 from datetime import datetime, timezone
 
-import requests
+from curl_cffi import requests as curl_requests
 
 from .base import BaseCollector, CollectedItem
 
@@ -36,27 +34,12 @@ class BilibiliCollector(BaseCollector):
 
     def __init__(self, creators: list[dict]) -> None:
         self.creators = creators
-        self._session = requests.Session()
+        self._session = curl_requests.Session()
 
     @staticmethod
     def _clean_title(title: str) -> str:
         """Remove HTML tags (e.g. <em class=\"keyword\">) from title."""
         return BilibiliCollector._TAG_RE.sub("", title)
-
-    def _ensure_cookies(self, uid: int | str) -> None:
-        """Visit space page to obtain session cookies (buvid3 etc.)."""
-        try:
-            self._session.get(
-                f"https://space.bilibili.com/{uid}",
-                headers={
-                    "User-Agent": self._HEADERS["User-Agent"],
-                    "Accept-Language": "zh-CN,zh;q=0.9",
-                },
-                timeout=15,
-            )
-        except Exception:
-            # Non-critical
-            pass
 
     def _search_videos(self, name: str, uid: int | str) -> list[dict]:
         """Search videos by UP主 name, then filter by UID for precision."""
@@ -74,9 +57,9 @@ class BilibiliCollector(BaseCollector):
                     **self._HEADERS,
                     "Referer": "https://search.bilibili.com/",
                 },
+                impersonate="chrome120",
                 timeout=15,
             )
-            resp.raise_for_status()
             data = resp.json()
         except Exception as e:
             print(f"  [Bilibili] Search request failed for '{name}': {e}")
@@ -108,16 +91,14 @@ class BilibiliCollector(BaseCollector):
         items: list[CollectedItem] = []
 
         for creator in self.creators:
-            name = creator["name"]
-            uid = creator["uid"]
+            name = creator.get("name", "")
+            uid = creator.get("uid", "")
+
+            if not name or not uid:
+                continue
 
             print(f"  [Bilibili] '{name}' (uid={uid})")
 
-            # Step 1: Get session cookies from space page
-            self._ensure_cookies(uid)
-            time.sleep(2)
-
-            # Step 2: Search videos
             videos = self._search_videos(name, uid)
 
             for v in videos:
@@ -137,6 +118,9 @@ class BilibiliCollector(BaseCollector):
                     description=v.get("description", ""),
                     extra={"uid": uid, "aid": aid},
                 ))
+
+            if videos:
+                print(f"  [Bilibili] '{name}': {len(videos)} videos collected")
 
             # Small delay between creators
             if creator != self.creators[-1]:
