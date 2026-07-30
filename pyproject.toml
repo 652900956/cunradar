@@ -2,6 +2,7 @@
 name = "cunradar"
 version = "1.0.0"
 description = "CunRadar - AI-powered Personal Information Radar"
+license = { text = "MIT" }
 requires-python = ">=3.12"
 dependencies = [
     "requests>=2.32.0",
