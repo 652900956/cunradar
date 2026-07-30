@@ -63,12 +63,13 @@ def send_digest(
             line = line.strip()
             if not line:
                 continue
-            # Convert **bold** to <b>bold</b>
-            line = re.sub(r"\*\*(.+?)\*\*", lambda m: f"<b>{_esc(m.group(1))}</b>", line)
+            # Escape HTML first, then convert **bold** to <b>bold</b>
+            line = _esc(line)
+            line = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", line)
             if line.startswith("#"):
-                parts.append(f"<b>{_esc(line.lstrip('# '))}</b>")
+                parts.append(f"<b>{line.lstrip('# ')}</b>")
             else:
-                parts.append(_esc(line))
+                parts.append(line)
         parts.append("")
 
     # Determine which sources to render
