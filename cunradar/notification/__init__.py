@@ -57,12 +57,16 @@ def send_digest(
     if digest:
         parts.append("<b>── 今日技术动态 ──</b>")
         parts.append("")
+        import re
+
         for line in digest.strip().split("\n"):
             line = line.strip()
             if not line:
                 continue
-            if line.startswith("#") or line.startswith("**"):
-                parts.append(f"<b>{_esc(line.lstrip('#* '))}</b>")
+            # Convert **bold** to <b>bold</b>
+            line = re.sub(r"\*\*(.+?)\*\*", lambda m: f"<b>{_esc(m.group(1))}</b>", line)
+            if line.startswith("#"):
+                parts.append(f"<b>{_esc(line.lstrip('# '))}</b>")
             else:
                 parts.append(_esc(line))
         parts.append("")

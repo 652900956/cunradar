@@ -43,49 +43,61 @@ class BilibiliCollector(BaseCollector):
 
     def _search_videos(self, name: str, uid: int | str) -> list[dict]:
         """Search videos by UP主 name, then filter by UID for precision."""
-        params = {
-            "search_type": "video",
-            "keyword": name,
-            "page": 1,
-            "order": "pubdate",
-        }
-        try:
-            resp = self._session.get(
-                self.SEARCH_API,
-                params=params,
-                headers={
-                    **self._HEADERS,
-                    "Referer": "https://search.bilibili.com/",
-                },
-                impersonate="chrome120",
-                timeout=15,
-            )
-            data = resp.json()
-        except Exception as e:
-            print(f"  [Bilibili] Search request failed for '{name}': {e}")
-            return []
+        max_attempts = 2
+        for attempt in range(max_attempts):
+            params = {
+                "search_type": "video",
+                "keyword": name,
+                "page": 1,
+                "order": "pubdate",
+            }
+            try:
+                resp = self._session.get(
+                    self.SEARCH_API,
+                    params=params,
+                    headers={
+                        **self._HEADERS,
+                        "Referer": "https://search.bilibili.com/",
+                    },
+                    impersonate="chrome120",
+                    timeout=15,
+                )
+                data = resp.json()
+            except Exception as e:
+                print(f"  [Bilibili] Search request failed for '{name}': {e}")
+                if attempt < max_attempts - 1:
+                    time.sleep(3)
+                continue
 
-        if data.get("code") != 0:
-            print(f"  [Bilibili] Search API error for '{name}': code={data.get('code')}, msg={data.get('message', '')}")
-            return []
+            code = data.get("code")
+            if code == -412 and attempt < max_attempts - 1:
+                print(f"  [Bilibili] '{name}': banned (-412), retrying...")
+                time.sleep(3)
+                continue
 
-        results = data.get("data", {}).get("result", [])
-        if not results:
-            print(f"  [Bilibili] No search results for '{name}'")
-            return []
+            if code != 0:
+                print(f"  [Bilibili] Search API error for '{name}': code={code}, msg={data.get('message', '')}")
+                return []
 
-        # Filter by UID to ensure only this creator's videos
-        uid_str = str(uid)
-        filtered = [v for v in results if str(v.get("mid", "")) == uid_str]
+            results = data.get("data", {}).get("result", [])
+            if not results:
+                print(f"  [Bilibili] No search results for '{name}'")
+                return []
 
-        if not filtered:
-            print(f"  [Bilibili] '{name}': found {len(results)} results, but none matched uid={uid}")
-            for v in results[:3]:
-                print(f"    - author={v.get('author','?')}, mid={v.get('mid','?')}")
-        else:
-            print(f"  [Bilibili] '{name}': {len(filtered)} videos found via search")
+            # Filter by UID to ensure only this creator's videos
+            uid_str = str(uid)
+            filtered = [v for v in results if str(v.get("mid", "")) == uid_str]
 
-        return filtered
+            if not filtered:
+                print(f"  [Bilibili] '{name}': found {len(results)} results, but none matched uid={uid}")
+                for v in results[:3]:
+                    print(f"    - author={v.get('author','?')}, mid={v.get('mid','?')}")
+            else:
+                print(f"  [Bilibili] '{name}': {len(filtered)} videos found via search")
+
+            return filtered
+
+        return []
 
     def collect(self) -> list[CollectedItem]:
         items: list[CollectedItem] = []
