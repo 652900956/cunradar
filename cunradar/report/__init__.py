@@ -109,12 +109,11 @@ def generate_html(
             line = line.strip()
             if not line:
                 continue
-            if line.startswith("### "):
-                digest_html += f"<h3>{line[4:]}</h3>"
-            elif line.startswith("## "):
-                digest_html += f"<h2>{line[3:]}</h2>"
-            elif line.startswith("# "):
-                digest_html += f"<h1>{line[2:]}</h1>"
+            # Handle headings: # to ######
+            heading_match = re.match(r"^(#{1,6})\s+(.+)$", line)
+            if heading_match:
+                level = len(heading_match.group(1))
+                digest_html += f"<h{level}>{heading_match.group(2)}</h{level}>"
             elif line.startswith("- ") or line.startswith("* "):
                 digest_html += f"<li>{line[2:]}</li>"
             else:
