@@ -199,10 +199,14 @@ schedule:
 
 ### 本地开发
 
-在 `.env` 中添加：
+在 `.env` 中添加（单行 JSON，博主之间用逗号分隔）：
 
 ```env
+# 只关注一个博主
 FOLLOW_CONFIG={"youtube":[{"name":"Web3村长","channel_id":"UC5MbekhrH8iyFBQLbccBSRg"}],"bilibili":[{"name":"Web3村长Official","uid":1224034462}],"rss":[{"name":"村长博客","url":"https://cunzhangblog.com/rss.xml"}],"github":[{"name":"CunRadar","repo":"cunzhangcrypto/CunRadar"}],"github_trending":{"enabled":true,"language":"","limit":5}}
+
+# 多个博主（注意中间有逗号）
+FOLLOW_CONFIG={"youtube":[{"name":"Web3村长","channel_id":"UC5MbekhrH8iyFBQLbccBSRg"},{"name":"Fireship","channel_id":"UCsBjURrPoezykLs9EqgamOA"}],"bilibili":[{"name":"Web3村长Official","uid":1224034462}],"rss":[{"name":"村长博客","url":"https://cunzhangblog.com/rss.xml"},{"name":"36氪","url":"https://36kr.com/feed"}],"github":[{"name":"CunRadar","repo":"cunzhangcrypto/CunRadar"}],"github_trending":{"enabled":true,"language":"","limit":5}}
 ```
 
 > `.env` 已在 `.gitignore` 中，不会被提交到仓库。
