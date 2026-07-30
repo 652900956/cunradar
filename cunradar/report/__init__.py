@@ -115,7 +115,9 @@ def generate_html(
                 level = len(heading_match.group(1))
                 digest_html += f"<h{level}>{heading_match.group(2)}</h{level}>"
             elif line.startswith("- ") or line.startswith("* "):
-                digest_html += f"<li>{line[2:]}</li>"
+                # Also convert **bold** in list items
+                text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", line[2:])
+                digest_html += f"<li>{text}</li>"
             else:
                 # Convert **bold** to <strong>
                 line = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", line)
