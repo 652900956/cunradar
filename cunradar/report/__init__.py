@@ -101,6 +101,8 @@ def generate_html(
             total_sections += 1
 
     # Convert AI digest markdown to simple HTML paragraphs
+    import re
+
     digest_html = ""
     if digest:
         for line in digest.strip().split("\n"):
@@ -116,6 +118,8 @@ def generate_html(
             elif line.startswith("- ") or line.startswith("* "):
                 digest_html += f"<li>{line[2:]}</li>"
             else:
+                # Convert **bold** to <strong>
+                line = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", line)
                 digest_html += f"<p>{line}</p>"
         digest_html = f'<div class="digest">{digest_html}</div>'
 
