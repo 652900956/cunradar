@@ -9,7 +9,7 @@ app:
   # 只统计过去 N 小时内发布的内容
   max_item_age_hours: 24
 
-# ─── 关注列表（示例） ──────────────────────────────────────────
+# ─── 关注列表（示例 + 兜底） ─────────────────────────────────
 # ⚠️ 如果你在公开仓库中使用，建议通过 FOLLOW_CONFIG 环境变量
 #    传入真实关注列表（JSON 格式），避免暴露订阅信息。
 #
@@ -18,21 +18,20 @@ app:
 #
 #    详见 README.md 中的「隐私保护」章节。
 #
-#    以下是 JSON 格式示例：
+#    以下是 JSON 格式示例（使用村长的信息作为演示）：
 #
 #    FOLLOW_CONFIG='{
 #      "youtube": [
-#        {"name": "博主A", "channel_id": "UC..."},
-#        {"name": "博主B", "channel_id": "UC..."}
+#        {"name": "Web3村长", "channel_id": "UC5MbekhrH8iyFBQLbccBSRg"}
 #      ],
 #      "bilibili": [
-#        {"name": "UP主A", "uid": 123456}
+#        {"name": "Web3村长Official", "uid": 1224034462}
 #      ],
 #      "rss": [
-#        {"name": "博客A", "url": "https://example.com/rss.xml"}
+#        {"name": "村长博客", "url": "https://cunzhangblog.com/rss.xml"}
 #      ],
 #      "github": [
-#        {"name": "项目A", "repo": "owner/repo"}
+#        {"name": "CunRadar", "repo": "cunzhangcrypto/CunRadar"}
 #      ],
 #      "github_trending": {
 #        "enabled": true,
@@ -45,23 +44,23 @@ follow:
 
   # YouTube 频道
   youtube:
-    - name: "示例博主"
-      channel_id: "UCxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    - name: "Web3村长"
+      channel_id: "UC5MbekhrH8iyFBQLbccBSRg"
 
   # B站 UP 主
   bilibili:
-    - name: "示例UP主"
-      uid: 1234567890
+    - name: "Web3村长Official"
+      uid: 1224034462
 
   # RSS / 博客订阅
   rss:
-    - name: "示例博客"
-      url: "https://example.com/rss.xml"
+    - name: "村长博客"
+      url: "https://cunzhangblog.com/rss.xml"
 
   # GitHub 项目追踪
   github:
-    - name: "示例项目"
-      repo: "owner/repo"
+    - name: "CunRadar"
+      repo: "cunzhangcrypto/CunRadar"
 
   # GitHub Trending
   github_trending:

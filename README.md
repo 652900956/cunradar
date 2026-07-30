@@ -45,20 +45,20 @@ pip install -e .
 ```yaml
 follow:
   youtube:
-    - name: "示例博主"
-      channel_id: "UCxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    - name: "Web3村长"
+      channel_id: "UC5MbekhrH8iyFBQLbccBSRg"
 
   bilibili:
-    - name: "示例UP主"
-      uid: 1234567890
+    - name: "Web3村长Official"
+      uid: 1224034462
 
   rss:
-    - name: "示例博客"
-      url: "https://example.com/rss.xml"
+    - name: "村长博客"
+      url: "https://cunzhangblog.com/rss.xml"
 
   github:
-    - name: "示例项目"
-      repo: "owner/repo"
+    - name: "CunRadar"
+      repo: "cunzhangcrypto/CunRadar"
 
   github_trending:
     enabled: true
@@ -202,7 +202,7 @@ schedule:
 在 `.env` 中添加：
 
 ```env
-FOLLOW_CONFIG={"youtube":[{"name":"博主A","channel_id":"UC..."},{"name":"博主B","channel_id":"UC..."}],"bilibili":[{"name":"UP主A","uid":123}],"rss":[{"name":"博客A","url":"https://example.com/rss.xml"}],"github":[{"name":"项目A","repo":"owner/repo"}],"github_trending":{"enabled":true,"language":"","limit":5}}
+FOLLOW_CONFIG={"youtube":[{"name":"Web3村长","channel_id":"UC5MbekhrH8iyFBQLbccBSRg"}],"bilibili":[{"name":"Web3村长Official","uid":1224034462}],"rss":[{"name":"村长博客","url":"https://cunzhangblog.com/rss.xml"}],"github":[{"name":"CunRadar","repo":"cunzhangcrypto/CunRadar"}],"github_trending":{"enabled":true,"language":"","limit":5}}
 ```
 
 > `.env` 已在 `.gitignore` 中，不会被提交到仓库。
