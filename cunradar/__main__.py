@@ -6,7 +6,7 @@ Orchestrates the full daily pipeline:
   3. Filter by time window + deduplicate against SQLite
   4. Generate AI digest
   5. Generate HTML report
-  6. Push to Telegram
+  6. Push to Feishu
 """
 
 import os
@@ -240,18 +240,21 @@ def main() -> None:
 
     # ── 6. Generate AI digest ──
     digest = ""
-    if all_new_items and ai_cfg.get("api_key"):
+    ai_key = (
+        ai_cfg.get("api_key")
+        or os.environ.get("AI_API_KEY")
+        or os.environ.get("DEEPSEEK_API_KEY", "")
+    )
+    if all_new_items and ai_key:
         print("\n[AI] Generating daily digest...")
         digest = generate_digest(
             items=all_new_items,
             date_str=date_str,
-            api_key=ai_cfg["api_key"],
-            model=ai_cfg.get("model", "deepseek-chat"),
-            api_base=ai_cfg.get("api_base", "https://api.deepseek.com"),
+            config=config,
             timeout=ai_cfg.get("timeout", 120),
         )
-    elif not ai_cfg.get("api_key"):
-        print("\n[AI] Skipped (DEEPSEEK_API_KEY not configured)")
+    elif not ai_key:
+        print("\n[AI] Skipped (AI_API_KEY / DEEPSEEK_API_KEY not configured)")
     else:
         print("\n[AI] Skipped (no new items to summarize)")
 
@@ -271,25 +274,26 @@ def main() -> None:
     else:
         print("\n[Report] Skipped (HTML disabled or no new items)")
 
-    # ── 7. Telegram notification ──
-    tg_cfg = notify_cfg.get("telegram", {})
-    if tg_cfg.get("bot_token") and tg_cfg.get("chat_id"):
-        print("\n[Telegram] Sending digest...")
+    # ── 7. Feishu notification ──
+    notify_cfg = config.get("notification", {})
+    if notify_cfg:
+        print("\n[Notify] Sending digest...")
         html_url = None
         if os.environ.get("CUNRADAR_PUBLIC_URL"):
             html_url = f"{os.environ['CUNRADAR_PUBLIC_URL']}/{date_str}/"
         display_datetime = now.strftime("%Y-%m-%d  %H:%M")
-        send_digest(
-            bot_token=tg_cfg["bot_token"],
-            chat_id=tg_cfg["chat_id"],
+        sent_ok = send_digest(
+            notification_cfg=notify_cfg,
             date_str=display_datetime,
             items=all_new_items,
             digest=digest,
             html_url=html_url,
             configured_sources=configured_sources,
         )
+        if not sent_ok:
+            print("  [Notify] 全部通道推送失败或未配置 webhook")
     else:
-        print("\n[Telegram] Skipped (bot_token or chat_id not configured)")
+        print("\n[Notify] Skipped (notification not configured)")
 
     # ── 8. Cleanup ──
     storage.close()

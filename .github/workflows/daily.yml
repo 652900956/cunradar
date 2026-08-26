@@ -2,26 +2,23 @@ name: CunRadar Daily
 
 on:
   schedule:
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 自定义运行时间（UTC 时间）
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 定时运行时间（UTC 时间，北京时间 = UTC + 8）
     #
     #  分钟 小时 日 月 星期
     #   ──  ──  ─ ─ ───
-    #  "0   8   * * *"  = 每天 UTC 08:00
     #
-    # 北京时间比 UTC 快 8 小时，所以：
-    #   UTC 00:00 = 北京 08:00
-    #   UTC 16:00 = 北京 00:00（次日）
+    # 以下为北京时间 06:30 / 12:20 / 21:00：
+    #   北京时间 06:30 → UTC 22:30（前一天）
+    #   北京时间 12:20 → UTC 04:20
+    #   北京时间 21:00 → UTC 13:00
     #
-    # 常用配置：
-    #   "0 0 * * *"   每天北京 08:00（默认）
-    #   "30 1 * * *"  每天北京 09:30
-    #   "0 12 * * *"  每天北京 20:00
-    #   "0 0 * * 1-5" 工作日北京 08:00（周末不跑）
-    #
-    # 只改第一、二个数字（分钟、小时），其余保持 * 不变
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    - cron: "0 11 * * *"
+    # 想改时间，只改第一、二个数字（分钟、小时）即可，其余保持 * 不变。
+    # 例如改成每小时跑： "0 * * * *"
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - cron: "30 22 * * *"   # 北京时间 06:30
+    - cron: "20 4 * * *"    # 北京时间 12:20
+    - cron: "0 13 * * *"    # 北京时间 21:00
   workflow_dispatch:
 
 concurrency:
@@ -35,33 +32,40 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 1
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.12"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v10.0.1
 
       - name: Install dependencies
         run: uv sync --no-dev
 
       - name: Restore database from cache
-        uses: actions/cache@v4
-        id: db-cache
+        uses: actions/cache/restore@v4
         with:
           path: output/cunradar.db
-          key: cunradar-db-v1
+          key: cunradar-db-${{ github.run_number }}
+          restore-keys: |
+            cunradar-db-
 
       - name: Run CunRadar
         env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY || secrets.DEEPSEEK_API_KEY || '' }}
+          AI_PROVIDER: ${{ vars.AI_PROVIDER || 'deepseek' }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL || '' }}
+          AI_MODEL: ${{ vars.AI_MODEL || '' }}
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          FEISHU_SECRET: ${{ secrets.FEISHU_SECRET || '' }}
+          WECOM_WEBHOOK_URL: ${{ secrets.WECOM_WEBHOOK_URL || '' }}
+          DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL || '' }}
+          DINGTALK_SECRET: ${{ secrets.DINGTALK_SECRET || '' }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
           CUNRADAR_PUBLIC_URL: ${{ vars.CUNRADAR_PUBLIC_URL || '' }}
           FOLLOW_CONFIG: ${{ secrets.FOLLOW_CONFIG || vars.FOLLOW_CONFIG || '' }}
@@ -69,11 +73,13 @@ jobs:
 
       - name: Save database to cache
         uses: actions/cache/save@v4
+        if: always()
         with:
           path: output/cunradar.db
-          key: cunradar-db-v1
+          key: cunradar-db-${{ github.run_number }}
 
       - name: Deploy to Cloudflare Pages
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
         run: npx wrangler pages deploy output/ --project-name=${{ vars.CUNRADAR_PROJECT_NAME || 'cunradar' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
