@@ -42,7 +42,79 @@ app:
 # ────────────────────────────────────────────────────────────────
 follow:
 
-  # ── 只保留 GitHub Trending（每日热门榜），limit 改为 8 ──
+  # ── B站 UP 主 ───────────────────────────────────────────────
+  bilibili:
+    # 国内 A 股（复盘 / 游资 / 资讯）
+    - {name: "ETF数据侠", uid: 383772338}
+    - {name: "海螺复盘", uid: 471949556}
+    - {name: "笨笨的韭菜", uid: 11473291}
+    - {name: "来去由心", uid: 11430504}
+    - {name: "逻辑哥复盘笔记", uid: 433280310}
+    - {name: "老柯复盘", uid: 3546635351099881}
+    - {name: "无名游资", uid: 564756022}
+    - {name: "擒龙先生", uid: 3546929266952873}
+    - {name: "江浙陈某", uid: 1609483218}
+    - {name: "大通路老范", uid: 281471424}
+    - {name: "舵主老徐", uid: 2021785702}
+    - {name: "文文复盘", uid: 288212429}
+    - {name: "游资先锋", uid: 3546681597495534}
+    - {name: "游资大侠", uid: 2093940493}
+    - {name: "股痴养心", uid: 3493082215484049}
+    - {name: "点金论股", uid: 1361519228}
+    - {name: "文心游龙", uid: 3546942999103780}
+    - {name: "无敌姜神", uid: 3706959876327428}
+    - {name: "梦想早日退休的韭菜", uid: 3546703766489098}
+    - {name: "三步学交易-老雷", uid: 527939103}
+    - {name: "史诗级韭菜", uid: 322005137}
+    - {name: "股帮", uid: 2064644818}
+    - {name: "邻居大爷投资", uid: 3493292603869287}
+    - {name: "股市里的猩猩", uid: 3546610447419885}
+    - {name: "米来哆哆", uid: 3546669224298959}
+    - {name: "炒股养家学", uid: 25294066}
+    - {name: "趋势天哥", uid: 1372241958}
+    - {name: "梦想超过余额宝", uid: 32222710}
+    - {name: "晖哥的财务自由之路", uid: 370205163}
+    - {name: "真神-交易神", uid: 510189036}
+    # 国外 外汇 / 加密 类（与上面的 A 股区分，同样正常推送）
+    - {name: "李耳说行情", uid: 3707016505722995}
+    - {name: "交易与江河", uid: 3691001417828998}
+    - {name: "区块拿铁", uid: 1937517031}
+    - {name: "品茶谈金", uid: 3546796552882601}
+
+  # ── YouTube 频道（国外 外汇 / 加密 / 美股 为主，30 个）──
+  youtube:
+    - {name: "大鏢客比特幣行情分析", channel_id: "UCXqlWO3Ki-lpnMlg9JobUMg"}
+    - {name: "The Trading Geek", channel_id: "UC2I5dxN4qhaV1dw55u31JWw"}
+    - {name: "颜驰Bit", channel_id: "UC1E2aUWv221Wgwi31ezsidg"}
+    - {name: "Booming Bulls", channel_id: "UC2sIhf108S02F0Qlb2a88eQ"}
+    - {name: "Pushkar Raj Thakur: Stock Market Educator", channel_id: "UCEAAzv2OBqxsSczKJ2QZyGQ"}
+    - {name: "Crypto Rover", channel_id: "UCoUcIy0SWXXIhzWgJNdMoFQ"}
+    - {name: "Bitbull", channel_id: "UCh8EqZyAUunyl1ryHeZAaSw"}
+    - {name: "投资TALK君", channel_id: "UCRBrH2qS7yKGMNSmjnj8gcw"}
+    - {name: "Shu Crypto", channel_id: "UCkgjymFdCdhhhUtF_g3RdOg"}
+    - {name: "比特币欧阳", channel_id: "UCzZ49DculfIZv6W1X81pLlQ"}
+    - {name: "币圈所长课堂", channel_id: "UCtjaX6UWevjh8UK-IQDgSMg"}
+    - {name: "比特币峰哥", channel_id: "UCqKGLcPxejYCq0rKN51sDJg"}
+    - {name: "比特币飞扬", channel_id: "UCvuvTVzo8W9I6QOyZCXlubg"}
+    - {name: "TraderChenge", channel_id: "UCVG6QftYGkfQdHgUqs1N6jw"}
+    - {name: "TheChartGuys", channel_id: "UCnqZ2hx679DqRi6khRUNw2g"}
+    - {name: "老李玩钱", channel_id: "UCo2gxyermsLBSCxFHvJs0Zg"}
+    - {name: "ZipTrader", channel_id: "UC0BGhWsIbV7Dm-lsvhdlMbA"}
+    - {name: "Financial Education", channel_id: "UCnMn36GT_H0X-w5_ckLtlgQ"}
+    - {name: "NaNa说美股", channel_id: "UCFhJ8ZFg9W4kLwFTBBNIjOw"}
+    - {name: "Matt Wolfe", channel_id: "UChpleBmo18P08aKCIgti38g"}
+    - {name: "Ross Cameron - Warrior Trading", channel_id: "UCBayuhgYpKNbhJxfExYkPfA"}
+    - {name: "Crypto Jebb", channel_id: "UCviqt5aaucA1jP3qFmorZLQ"}
+    - {name: "TraderNick", channel_id: "UCPCPE5MoI7DS1WiVB_-mzNw"}
+    - {name: "分析师舒琴谈比特币", channel_id: "UC45uU-M3pHzHncZ5PvG_7iw"}
+    - {name: "龚有柴-比特币老玩家", channel_id: "UC7WbjMEDZth4ZfoaLano9mw"}
+    - {name: "CakeBaBa", channel_id: "UCcMyv5UQ9dCVN2UbLhXiLWw"}
+    - {name: "Jimmy 米哥", channel_id: "UCfaGZZuf1_RkVAAIqz3EN5g"}
+    - {name: "達哥說交易", channel_id: "UCXJ3A2Zr04I6QIU_zAnN9Lw"}
+    - {name: "美投讲美股", channel_id: "UCBUH38E0ngqvmTqdchWunwQ"}
+    - {name: "币需暴富", channel_id: "UCJQgr-XyEELFhdY1Dmi7uSQ"}
+
+  # ── GitHub Trending（每日热门榜）──
   github_trending:
     enabled: true
     language: ""
