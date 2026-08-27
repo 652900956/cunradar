@@ -42,31 +42,11 @@ app:
 # ────────────────────────────────────────────────────────────────
 follow:
 
-  # YouTube 频道
-  youtube:
-    - name: "Web3村长"
-      channel_id: "UC5MbekhrH8iyFBQLbccBSRg"
-
-  # B站 UP 主
-  bilibili:
-    - name: "Web3村长Official"
-      uid: 1224034462
-
-  # RSS / 博客订阅
-  rss:
-    - name: "村长博客"
-      url: "https://cunzhangblog.com/rss.xml"
-
-  # GitHub 项目追踪
-  github:
-    - name: "CunRadar"
-      repo: "652900956/CunRadar"
-
-  # GitHub Trending
+  # ── 只保留 GitHub Trending（每日热门榜），limit 改为 8 ──
   github_trending:
     enabled: true
     language: ""
-    limit: 5
+    limit: 8
 
 # ─── AI 配置（多供应商，OpenAI 兼容） ───────────────────────
 # provider 可选：deepseek / zhipu / hunyuan / qwen
