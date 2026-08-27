@@ -118,7 +118,7 @@ python -m cunradar
 
 | `AI_PROVIDER` | 供应商 | 模型（默认） | 费用 | 备注 |
 |---------------|--------|--------------|------|------|
-| `deepseek` | DeepSeek | `deepseek-chat` | 付费（便宜） | 质量稳定，推荐默认 |
+| `deepseek` | DeepSeek | `deepseek-v4-flash` | 付费（便宜） | 质量稳定，推荐默认（2026-07-24 起旧名 deepseek-chat/reasoner 已停用） |
 | `zhipu` | 智谱 AI | `glm-4.7-flash` | **免费** | OpenAI 兼容地址 `https://open.bigmodel.cn/api/paas/v4` |
 | `hunyuan` | 腾讯混元 | `hunyuan-lite` | **免费** | 地址 `https://api.hunyuan.cloud.tencent.com/v1`；更好的免费档是 `hunyuan-turbos-latest` |
 | `qwen` | 通义千问 | `qwen3.7-flash` | 便宜 | 地址 `https://dashscope.aliyuncs.com/compatible-mode/v1`；若报模型名错误，改用 `qwen3.6-flash` / `qwen-turbo` |
@@ -138,7 +138,7 @@ AI_API_KEY=你的智谱key
 ```env
 AI_PROVIDER=deepseek
 AI_API_KEY=你的key
-AI_MODEL=deepseek-reasoner      # 想换模型就填
+AI_MODEL=deepseek-v4-flash       # 想换模型就填（deepseek-chat/reasoner 已于 2026-07-24 停用）；默认已开启思考模式
 AI_BASE_URL=https://api.deepseek.com/v1   # 想换兼容端点就填
 ```
 > 优先级：**环境变量 > config.yaml 里的设置 > 供应商预设**。也就是说，只要设了 `AI_MODEL` / `AI_BASE_URL`，就以环境变量为准。

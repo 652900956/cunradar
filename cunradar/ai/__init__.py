@@ -1,7 +1,7 @@
 """AI daily digest generator — OpenAI-compatible, multi-provider.
 
 Built-in presets (all OpenAI-compatible chat-completions endpoints):
-  - deepseek : DeepSeek（付费，性价比高）
+  - deepseek : DeepSeek V4-Flash（付费；2026-07-24 起旧名 deepseek-chat/reasoner 已停用，统一为 deepseek-v4-flash，思考模式用 thinking 参数开启）
   - zhipu    : 智谱 GLM-4.7-Flash（免费）
   - hunyuan  : 腾讯混元 Lite（免费；更好的免费档 hunyuan-turbos-latest）
   - qwen     : 通义千问 Qwen3.7 Flash（便宜；若报错改用 qwen3.6-flash / qwen-turbo）
@@ -24,8 +24,9 @@ from ..collectors.base import CollectedItem
 PROVIDER_PRESETS = {
     "deepseek": {
         "api_base": "https://api.deepseek.com/v1",
-        "model": "deepseek-chat",
-        "note": "DeepSeek，性价比高（付费）",
+        "model": "deepseek-v4-flash",
+        "thinking": "enabled",
+        "note": "DeepSeek V4-Flash（2026-07-24 起 deepseek-chat/reasoner 已停用，统一映射到此模型；思考模式需显式开启）",
     },
     "zhipu": {
         "api_base": "https://open.bigmodel.cn/api/paas/v4",
@@ -95,11 +96,18 @@ def resolve_ai_config(config: dict | None) -> dict:
         or preset["api_base"]
     )
     model = os.environ.get("AI_MODEL") or ai_cfg.get("model") or preset["model"]
+    # thinking 模式：仅 DeepSeek V4 系列支持；默认开启（对应原 deepseek-reasoner 的思考模式）
+    thinking = (
+        os.environ.get("AI_THINKING")        # 取值 enabled / disabled
+        or ai_cfg.get("thinking")
+        or preset.get("thinking", "")
+    )
     return {
         "provider": provider,
         "api_key": api_key,
         "api_base": api_base,
         "model": model,
+        "thinking": thinking,
         "timeout": ai_cfg.get("timeout", 120),
     }
 
@@ -135,6 +143,10 @@ def generate_digest(
         "temperature": 0.7,
         "max_tokens": 1024,
     }
+    # DeepSeek V4 思考模式：仅在 provider 为 deepseek 且配置了 thinking 时附加
+    # （官方格式：{"type": "enabled"}，对应原 deepseek-reasoner 的推理模式）
+    if cfg.get("thinking") and cfg["provider"] == "deepseek":
+        payload["thinking"] = {"type": cfg["thinking"]}
 
     headers = {
         "Authorization": f"Bearer {api_key}",
