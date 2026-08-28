@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ..collectors.base import CollectedItem
+from ..grouping import group_by_uploader
 
 _TEMPLATE_PATH = Path(__file__).resolve().parent / "template.html"
 _PUBLIC_DIR = Path(__file__).resolve().parent.parent.parent / "public"
@@ -19,19 +20,29 @@ _SOURCES = {
 }
 
 
-def _build_section(title: str, icon: str, items: list[CollectedItem]) -> str:
-    """Build an HTML section with items or an empty-state message."""
-    if not items:
+def _build_author_block(author: str, items: list[CollectedItem]) -> str:
+    """Build an author (博主/发帖人) sub-block with its items."""
+    rows = "\n".join(_build_row(item) for item in items)
+    return f"""<div class="author">
+    <h3>👤 {author} <span class="count">{len(items)}</span></h3>
+    <div class="items">{rows}</div>
+</div>"""
+
+
+def _build_section(title: str, icon: str, by_author: "dict[str, list[CollectedItem]]") -> str:
+    """Build an HTML section: 来源标题 + 其下每个博主的小节。"""
+    if not by_author:
         return f"""<div class="section">
     <h2>{icon} {title}</h2>
     <div class="empty-state">无新内容</div>
 </div>"""
 
-    rows = "\n".join(_build_row(item) for item in items)
+    total = sum(len(v) for v in by_author.values())
+    blocks = "\n".join(_build_author_block(a, its) for a, its in by_author.items())
 
     return f"""<div class="section">
-    <h2>{icon} {title} <span class="count">{len(items)}</span></h2>
-    <div class="items">{rows}</div>
+    <h2>{icon} {title} <span class="count">{total}</span></h2>
+    {blocks}
 </div>"""
 
 
@@ -78,10 +89,8 @@ def generate_html(
     out = Path(output_dir) / date_str
     out.mkdir(parents=True, exist_ok=True)
 
-    # Group items by source
-    grouped: dict[str, list[CollectedItem]] = {}
-    for item in items:
-        grouped.setdefault(item.source, []).append(item)
+    # Group items by source, then by author (博主/发帖人)
+    grouped = group_by_uploader(items)
 
     # Determine which sources to render
     if configured_sources:
@@ -96,7 +105,7 @@ def generate_html(
         if not info:
             continue
         title, icon = info
-        section_html += _build_section(title, icon, grouped.get(key, []))
+        section_html += _build_section(title, icon, grouped.get(key, {}))
         if key in grouped:
             total_sections += 1
 
@@ -127,7 +136,7 @@ def generate_html(
     # Read template
     template = _TEMPLATE_PATH.read_text(encoding="utf-8")
 
-    summary_items = sum(len(v) for v in grouped.values())
+    summary_items = sum(len(v) for by_author in grouped.values() for v in by_author.values())
 
     html = template.replace("{{TITLE}}", f"CunRadar Daily - {date_str}")
     if now is None:

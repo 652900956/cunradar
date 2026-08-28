@@ -60,15 +60,15 @@ class GitHubTrendingCollector(BaseCollector):
             stars_el = article.select_one(".float-sm-right")
             stars_text = stars_el.get_text(strip=True) if stars_el else ""
 
-            today = datetime.now(timezone.utc)
-
             items.append(CollectedItem(
                 source="github_trending",
                 source_name=repo_name,
-                item_id=f"gh-trend:{repo_name}:{today.strftime('%Y-%m-%d')}",
+                # 按仓库去重：同一仓库只要推送过一次就不再重复推送，
+                # 不再带日期，避免「每天都是新内容」导致重复推送。
+                item_id=f"gh-trend:{repo_name}",
                 title=f"{repo_name} ({language})",
                 url=f"https://github.com/{repo_name}",
-                published=today,
+                published=datetime.now(timezone.utc),
                 description=description,
                 extra={
                     "language": language,

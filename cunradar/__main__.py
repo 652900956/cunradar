@@ -76,13 +76,7 @@ def _run_collector(
     # 1. Time window filter
     aged = _filter_by_age(raw, max_hours, now)
 
-    # 1.5. For snapshot sources (trending), clear old entries before dedup
-    #     so a fresh daily snapshot is always recorded.
-    if not enable_fallback and aged:
-        for item in aged:
-            storage.delete_source(item.source, item.item_id)
-
-    # 2. Dedup
+    # 2. Dedup（基于跨次持久化的 SQLite：已见过的 item_id 不再推送）
     new_items: list[CollectedItem] = []
     for item in aged:
         if storage.is_new(item.item_id):
@@ -92,26 +86,23 @@ def _run_collector(
                 item.source_name, item.title, item.url,
             )
 
-    # 3. Fallback: if nothing new in window, take the latest item as baseline
+    # 3. 安静运行保护：本次没有"新"内容时，不打扰用户。
+    #    仅当该来源「从未记录过任何基线」时，把最新一条标记为已见，
+    #    作为后续去重的基准（不推送），避免将来把旧内容当成新内容重发。
     if not new_items and enable_fallback and raw:
-        print(f"  [{name}] Fallback: {len(raw)} raw items available")
-        # Try to sort by published date first
         with_date = [it for it in raw if it.published is not None]
-        print(f"  [{name}] Fallback: {len(with_date)} items have published dates")
+        fallback = with_date[0] if with_date else raw[0]
         if with_date:
             with_date.sort(key=lambda x: x.published, reverse=True)
             fallback = with_date[0]
-            print(f"  [{name}] Fallback picked (by date): {fallback.title} ({fallback.published})")
+        if storage.is_new(fallback.item_id):
+            print(f"  [{name}] 安静运行：仅记录基线（不推送）：{fallback.title}")
+            storage.mark_seen(
+                fallback.item_id, fallback.source,
+                fallback.source_name, fallback.title, fallback.url,
+            )
         else:
-            # No items have dates — just take the first one
-            fallback = raw[0]
-            print(f"  [{name}] Fallback picked (first raw): {fallback.title}")
-        print(f"  [{name}] Fallback item_id: {fallback.item_id}, source: {fallback.source}")
-        storage.mark_seen(
-            fallback.item_id, fallback.source,
-            fallback.source_name, fallback.title, fallback.url,
-        )
-        new_items.append(fallback)
+            print(f"  [{name}] 安静运行：无新内容，跳过（不推送）")
 
     print(f"  [{name}] {len(new_items)} new out of {len(raw)} total ({len(aged)} in time window)")
     return new_items
@@ -274,9 +265,10 @@ def main() -> None:
     else:
         print("\n[Report] Skipped (HTML disabled or no new items)")
 
-    # ── 7. Feishu notification ──
+    # ── 7. 通知推送 ──
+    # 没有任何新内容（且 AI 也未生成摘要）时，直接不推送，避免「无新发却仍发消息」。
     notify_cfg = config.get("notification", {})
-    if notify_cfg:
+    if notify_cfg and (all_new_items or digest):
         print("\n[Notify] Sending digest...")
         html_url = None
         if os.environ.get("CUNRADAR_PUBLIC_URL"):

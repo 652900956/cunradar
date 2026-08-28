@@ -15,6 +15,7 @@ import urllib.parse
 import requests
 
 from ..collectors.base import CollectedItem
+from ..grouping import group_by_uploader
 
 # 飞书 post 富文本的安全上限（字符数），超出则截断
 MAX_FEISHU_CHARS = 15000
@@ -31,6 +32,7 @@ _SOURCE_LABELS = {
 
 
 def _group_items(items: list[CollectedItem]) -> dict:
+    """兼容旧调用：按来源扁平分组。新逻辑请用 group_by_uploader。"""
     grouped: dict[str, list[CollectedItem]] = {}
     for item in items:
         grouped.setdefault(item.source, []).append(item)
@@ -58,7 +60,7 @@ def _build_feishu_payload(
     html_url: str | None,
     configured_sources: list[str] | None,
 ) -> dict:
-    grouped = _group_items(items)
+    grouped = group_by_uploader(items)
     # post 内容：每行是「行内元素」列表
     content_lines: list[list[dict]] = []
 
@@ -73,15 +75,21 @@ def _build_feishu_payload(
     render_keys = configured_sources or list(grouped.keys())
     for source in render_keys:
         label = _SOURCE_LABELS.get(source, source)
-        src_items = grouped.get(source)
-        if not src_items:
+        by_author = grouped.get(source)
+        if not by_author:
             content_lines.append([{"tag": "text", "text": f"{label}：无新内容"}])
             continue
-        content_lines.append([{"tag": "text", "text": f"{label}（{len(src_items)}）"}])
-        for it in src_items[:MAX_ITEMS_PER_SOURCE]:
+        total = sum(len(v) for v in by_author.values())
+        content_lines.append([{"tag": "text", "text": f"{label}（{total}）"}])
+        # 下钻到具体博主 / 发帖人
+        for author, items in by_author.items():
             content_lines.append(
-                [{"tag": "a", "text": (it.title or "")[:120], "href": it.url or "#"}]
+                [{"tag": "text", "text": f"  👤 {author}（{len(items)}）"}]
             )
+            for it in items[:MAX_ITEMS_PER_SOURCE]:
+                content_lines.append(
+                    [{"tag": "a", "text": (it.title or "")[:120], "href": it.url or "#"}]
+                )
 
     if html_url:
         content_lines.append([{"tag": "text", "text": "\U0001F310 完整日报"}])
@@ -161,7 +169,7 @@ def _build_markdown(
 
     两家的 markdown 均支持 # 标题、**加粗**、[文字](链接)、> 引用、换行。
     """
-    grouped = _group_items(items)
+    grouped = group_by_uploader(items)
     parts: list[str] = [f"# \U0001F4E1 CunRadar 每日资讯雷达 — {date_str}", ""]
 
     if digest:
@@ -172,15 +180,19 @@ def _build_markdown(
     render_keys = configured_sources or list(grouped.keys())
     for source in render_keys:
         label = _SOURCE_LABELS.get(source, source)
-        src_items = grouped.get(source)
-        if not src_items:
+        by_author = grouped.get(source)
+        if not by_author:
             parts.append(f"- {label}：无新内容")
             continue
-        parts.append(f"**{label}（{len(src_items)}）**")
-        for it in src_items[:MAX_ITEMS_PER_SOURCE]:
-            title = (it.title or "").replace("|", "/").replace("\n", " ")[:120]
-            url = it.url or "#"
-            parts.append(f"- [{title}]({url})")
+        total = sum(len(v) for v in by_author.values())
+        parts.append(f"**{label}（{total}）**")
+        # 下钻到具体博主 / 发帖人
+        for author, items in by_author.items():
+            parts.append(f"> 👤 {author}（{len(items)}）")
+            for it in items[:MAX_ITEMS_PER_SOURCE]:
+                title = (it.title or "").replace("|", "/").replace("\n", " ")[:120]
+                url = it.url or "#"
+                parts.append(f"- [{title}]({url})")
 
     if html_url:
         parts.append("")
